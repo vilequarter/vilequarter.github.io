@@ -1,0 +1,98 @@
+* {
+    font-family: Tahoma, Geneva, sans-serif;
+
+}
+
+.column {
+    min-height: 100%;
+    height: 100%;
+
+    display: inline-block;
+    margin-top: 4px;
+
+    position:relative;
+}
+
+#leftColumn {
+    width:25%;
+    padding-right: 20px;
+
+}
+
+#centerColumn {
+    width:50%;
+}
+
+#rightColumn {
+    width:20%;
+    padding-left: 5px;
+    top:10px;
+    position:relative;
+    vertical-align:top;
+}
+
+#game {
+    position:absolute;
+    bottom: 0;
+    top: 10px;
+    width:100%;
+    min-width: 1000px;
+    margin: 0 auto;
+    height: auto;
+
+}
+
+.selfMessage {
+    color:black;
+}
+
+.wispMessage {
+    color:rgb(53, 43, 187);
+}
+
+.oldMessage {
+    filter:contrast(25%);
+}
+
+.canAfford {
+    filter:opacity(100%);
+}
+
+.cannotAfford {
+    filter:opacity(25%);
+}
+
+.flavorText {
+    font-size: 9px;
+    color:gray;
+    text-align:right;
+    display:table-row;
+}
+
+.upgradeTitle {
+    font-size:14px;
+    color:black;
+    text-align:left;
+    font-weight:bold;
+    display:table-row;
+}
+
+.upgradeDescription {
+    font-size:12px;
+    color:black;
+    text-align:left;
+    display:table-row;
+}
+
+.upgradeCost {
+    font-size:11px;
+    color:black;
+    text-align:right;
+    display:table-row;
+}
+
+.upgradeButton{
+    position:relative;
+    width:100%;
+    display:table;
+}
