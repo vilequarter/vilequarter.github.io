@@ -28,7 +28,7 @@ var player = {
         for (x in this.essence){
             total += this.essence[x];
         }
-        return total;
+        return round(total);
     },
 
     maxEssence: 50,
@@ -114,7 +114,7 @@ var flags = {
     exactMeasurementsKnown: false
 }
 
-var unlockedUpgrades = [];
+//var unlockedUpgrades = [];
 
 // **end Saved Objects**
 
@@ -272,12 +272,13 @@ eatMultipleUpgrade.unlockEffects = function(){ addNewMessage("You know what, I b
 */
 
 // function round(value)
-// simple function that rounds an input number to 3 decimal points
+// simple function that rounds an input number to 5 decimal points
 // used to keep precision and to avoid converting to a string as toFixed does
 function round(value){
-    return Math.round(value * 1e3) / 1e3;
+    return Math.round(value * 1e5) / 1e5;
 }
 
+/*
 // function costString(essenceCost, corruptionCost)
 // accepts two arrays of six numerical values each, corresponding to ELEMENTS
 // returns a readable string displaying the elemental costs, omitting any zero values
@@ -310,11 +311,26 @@ function costString(essenceCost, corruptionCost){
     output = output.substring(0, output.length - 2);
     return output;
 }
+*/
 
 function costString(obj){
     var output = "";
 
-    
+    var essenceCost = obj.cost.essence;
+    if(typeof essenceCost != 'undefined'){
+        for(type in essenceCost){
+            output += essenceCost[type] + " " + type + " Essence, ";
+        }
+    }
+
+    var corruptionCost = obj.cost.corruption;
+    if(typeof corruptionCost != 'undefined'){
+        for(tyep in corruptionCost){
+            output += corruptionCost[type] + " " + type + " Corruption, ";
+        }
+    }
+    output = output.substring(0, output.length - 2);
+    return output;
 }
 
 /*
@@ -374,16 +390,14 @@ function processCost(obj){
     var essenceCost = obj.cost.essence;
     if(typeof essenceCost != 'undefined'){
         for(type in essenceCost){
-            player.essence[type] -= obj.cost.essence[type];
-            round(player.essence[type]);
+            removeEssence(type, obj.cost.essence[type])
         }
     }
     
     var corruptionCost = obj.cost.corruption;
     if(typeof corruptionCost != 'undefined'){
         for(type in corruptonCost){
-            player.corruption[type] -= obj.cost.corruption[type];
-            round(player.corruption[type]);
+            removeCorruption(type, obj.cost.corruption[type])
         }
     }
 }
@@ -479,16 +493,18 @@ function contextAction(stage){
 
 // function increaseInfluence(amount)
 // accepts a number value of how much influence to add
-// if player.totalEssence does not cover the influence cost (1:1), returns false
-// otherwise, subtracts the cost from player.essenceTypes in order of ELEMENTS, moving to the next element only if the element before it did not have enough to cover the entire cost
+// if player.totalEssence does not cover the influence cost, returns false
+// otherwise, subtracts the cost from player.essence
 // then increases player.influence and adds the necessary amount of mushrooms to areaOfInfluence.mushrooms and returns true
 function increaseInfluence(amount){
-    if(player.totalEssence < amount){
+    var totalEssenceCost = amount * player.influenceCost
+    if(player.totalEssence() < totalEssenceCost){
         return false;
     }
 
-    removeEssence(amount);
+    removeEqually(totalEssenceCost, "essence");
     player.influence += amount;
+
     if(!flags.wispApproach){
         areaOfInfluence.mushrooms += player.influence + 1;
     }
@@ -504,10 +520,38 @@ function increaseInfluence(amount){
     if(!flags.searchCost && player.influence >= 5){
         triggerFlag("searchCost");
     }
-
+    updateStats();
     return true;
 }
 
+function removeEqually(amount, resource){
+    while (amount > 0){
+        //determine number of resource types greater than zero
+        var nonzero = 0;
+        for(type in player[resource]){
+            if(player[resource][type] > 0){
+                nonzero++;
+            }
+        }
+
+        //subtract the same amount from each resource type
+        var fromEach = amount / nonzero;
+        for(type in player[resource]){
+            if(player[resource][type] < fromEach){ //not enough to cover divided cost, remove as much as possible
+                amount -= player[resource][type];
+                player[resource][type] = 0;
+            }
+            else{
+                player[resource][type] -= fromEach;
+                amount -= fromEach;
+            }
+        }
+        amount = round(amount);
+    }
+    updateStats();
+}
+
+/*
 // addEssence(amounts)
 // accepts array of six number values, in order of ELEMENTS
 // will attempt to add values to player's essenceTypes
@@ -516,7 +560,7 @@ function increaseInfluence(amount){
 // returns false if no essence was added due to player at current cap, or if current corruption >= current essence
 // returns true if any essence was added, whether or not any was wasted
 function addEssence(amounts){
-    if(player.totalCorruption > 0 && player.totalCorruption >= player.totalEssence && flags.wispApproach){
+    if(player.totalCorruption() > 0 && player.totalCorruption() >= player.totalEssence() && flags.wispApproach){
         if(flags.wispLineNumber >= 20){
             addNewMessage("Looks like I've got too much Corruption, I'd better refine it out.","selfMessage");
         }
@@ -570,7 +614,55 @@ function addEssence(amounts){
 
     return true;
 }
+*/
 
+function addEssence(type, amount){
+    //if totalCorruption >= totalEssence, do not add essence
+    if(checkCorruption()) return false;
+
+    //at essence cap
+    if(player.totalEssence() == player.maxEssence) return false;
+
+    var toCap = player.maxEssence - player.totalEssence();
+    if(toCap < amount){
+        player.essence[type] += toCap;
+        addCorruption(type, toCap);
+        return;
+    }
+    else {
+        player.essence[type] += amount;
+        addCorruption(type, amount);
+    }
+    updateStats();
+}
+
+function addCorruption(type, amount){
+    var toAdd = player.corruptionReceived * amount;
+    player.corruption[type] += toAdd;
+    updateStats();
+}
+
+function removeEssence(type, amount){
+    player.essence[type] -= amount;
+    player.essence[type] = round(player.essence[type]);
+}
+
+function removeCorruption(type, amount){
+    player.corruption[type] -= amount;
+    player.corruption[type] = round(player.corruption[type]);
+}
+
+function checkCorruption(){
+    if(player.totalCorruption() >= player.totalEssence()) return true;
+    return false;
+}
+
+function checkCorruption(amount){
+    if(player.totalCorruption() + (amount * player.corruptionReceived) >= player.totalEssence() + amount) return true;
+    return false;
+}
+
+/*
 // addCorruption(amounts)
 // accepts array of six number values, in order of ELEMENTS
 // multiplies incoming values by player's corruptionReceived modifier and adds the result to the respective corruption
@@ -727,6 +819,7 @@ function removeRandomEssence(value){
     }
     return amountRemoved;
 }
+*/
 
 // function getRandomArray(size)
 // accepts a number value, indicating the size of the array required
@@ -752,47 +845,37 @@ function getRandomArray(size){
 // called every game tick and anytime displayed stats are updated in other functions
 // calculates totals and updates display
 function updateStats(){
-    var totalEss = 0;
-    var totalCorr = 0;
-    for(var i = 0; i < ELEMENTS.length; i++){
-        player.essenceTypes[i] = round(player.essenceTypes[i]);
-        player.corruptionTypes[i] = round(player.corruptionTypes[i]);
-        totalEss += (player.essenceTypes[i] * 1.0);
-        totalCorr += (player.corruptionTypes[i] * 1.0);
-    }
-    player.totalEssence = round(totalEss);
-    player.totalCorruption = round(totalCorr);
 
-    if(player.totalEssence > player.greatestEssence){
-        player.greatestEssence = player.totalEssence;
+    if(player.totalEssence() > player.greatestEssence){
+        player.greatestEssence = player.totalEssence();
     }
 
     //numbers
     $("#influence").text(player.influence);
-    $("#totalEssence").text(player.totalEssence);
+    $("#totalEssence").text(player.totalEssence());
     $("#maxEssence").text(player.maxEssence);
-    $("#earthEssence").text(player.essenceTypes[0]);
-    $("#fireEssence").text(player.essenceTypes[1]);
-    $("#waterEssence").text(player.essenceTypes[2]);
-    $("#airEssence").text(player.essenceTypes[3]);
-    $("#celestialEssence").text(player.essenceTypes[4]);
-    $("#infernalEssence").text(player.essenceTypes[5]);
-    $("#totalCorruption").text(player.totalCorruption);
-    $("#earthCorruption").text(player.corruptionTypes[0]);
-    $("#fireCorruption").text(player.corruptionTypes[1]);
-    $("#waterCorruption").text(player.corruptionTypes[2]);
-    $("#airCorruption").text(player.corruptionTypes[3]);
-    $("#celestialCorruption").text(player.corruptionTypes[4]);
-    $("#infernalEssence").text(player.corruptionTypes[5]);
+    $("#earthEssence").text(player.essence.earth);
+    $("#fireEssence").text(player.essence.fire);
+    $("#waterEssence").text(player.essence.water);
+    $("#airEssence").text(player.essence.air);
+    $("#celestialEssence").text(player.essence.celestial);
+    $("#infernalEssence").text(player.essence.infernal);
+    $("#totalCorruption").text(player.totalCorruption());
+    $("#earthCorruption").text(player.corruption.earth);
+    $("#fireCorruption").text(player.corruption.fire);
+    $("#waterCorruption").text(player.corruption.water);
+    $("#airCorruption").text(player.corruption.air);
+    $("#celestialCorruption").text(player.corruption.celestial);
+    $("#infernalEssence").text(player.corruption.infernal);
 
     //use generic bar until essence types are known
     if(!flags.essenceTypesKnown){
-        var newWidth = round(player.totalEssence / player.maxEssence * 100) + "%";
+        var newWidth = round(player.totalEssence() / player.maxEssence * 100) + "%";
         $("#generalBar").css("width", newWidth);
         var R = 128;
         var G = 212;
         var B = 255;
-        var corruptionRatio = 1 - ((player.totalCorruption * 1.0) / player.totalEssence);
+        var corruptionRatio = 1 - ((player.totalCorruption() * 1.0) / player.totalEssence());
         R *= corruptionRatio;
         G *= corruptionRatio;
         B *= corruptionRatio;
@@ -801,7 +884,7 @@ function updateStats(){
     }
     else{
         if(!player.canRefine){
-            var corruptionRatio = 1 - ((player.totalCorruption * 1.0) / player.totalEssence);
+            var corruptionRatio = 1 - ((player.totalCorruption() * 1.0) / player.totalEssence());
             var elementHTML = ["#earthBar", "#fireBar", "#waterBar", "#airBar", "#celestialBar", "#infernalBar"];
 
             for(var i = 0; i < ELEMENTS.length; i++){
@@ -811,12 +894,12 @@ function updateStats(){
         }
 
         //progress bar
-        var earthPercent = round(player.essenceTypes[0] / player.maxEssence * 100);
-        var firePercent = round(player.essenceTypes[1] / player.maxEssence * 100);
-        var waterPercent = round(player.essenceTypes[2] / player.maxEssence * 100);
-        var airPercent = round(player.essenceTypes[3] / player.maxEssence * 100);
-        var celestialPercent = round(player.essenceTypes[4] / player.maxEssence * 100);
-        var infernalPercent = round(player.essenceTypes[5] / player.maxEssence * 100);
+        var earthPercent = round(player.essence.earth / player.maxEssence * 100);
+        var firePercent = round(player.essence.fire / player.maxEssence * 100);
+        var waterPercent = round(player.essence.water / player.maxEssence * 100);
+        var airPercent = round(player.essence.air / player.maxEssence * 100);
+        var celestialPercent = round(player.essence.celestial / player.maxEssence * 100);
+        var infernalPercent = round(player.essence.infernal / player.maxEssence * 100);
 
         $("#earthBar").css("width", earthPercent + "%");
         $("#fireBar").css("width", firePercent + "%");
@@ -839,7 +922,7 @@ function eatMushroom(){
     if(areaOfInfluence.mushrooms < 1){
         return;
     }
-    if(!addEssence([1, 0, 0, 0, 0, 0])){
+    if(!addEssence(earth, 1)){
         flags.wastedMushrooms++;
         if(!flags.wispApproach && flags.wastedMushrooms >= 10){
             triggerFlag("wispApproach");
@@ -855,10 +938,13 @@ function eatMultiple(amount){
     if(amount > areaOfInfluence.mushrooms){
         return false;
     }
-    if(player.totalCorruption >= player.totalEssence){
+    if(checkCorruption()){
         if(!confirm("Your Corruption is too high, so you won't gain any Essence from eating these. Eat anyway?")){
             return false;
         }
+    }
+    if(player.totalEssence() + amount > player.maxEssence){
+        if(!confirm("You will be unable to hold all the essence from these mushrooms. Eat anyway?")) return false;
     }
     for(var i = 0; i < amount; i++){
         eatMushroom();
@@ -960,14 +1046,14 @@ function toggleIncreaseInfluence(){
 function draw(){
     switch(player.drawing){
         case 'air':
-        if(!flags.canDrawAir && player.essenceTypes[3] >= 0.1){
+        if(!flags.canDrawAir && player.essence.air >= 0.1){
             triggerFlag("canDrawAir");
         }
-        addEssence([0, 0, 0, player.drawRate * player.influence, 0, 0]);
+        addEssence("air", player.drawRate * player.influence);
         break;
 
         case 'water':
-        addEssence([0, 0, player.drawRate * areaOfInfluence.waterArea, 0, 0, 0]);
+        addEssence("water", player.drawRate * areaOfInfluence.waterArea);
         break;
     }
 }
@@ -1048,7 +1134,7 @@ function triggerFlag(flag){
 // sets player.refining to false if there is no more corruption to remove
 // also triggers refining-related flags and upgrade unlocks
 function refine(){
-    if(player.totalCorruption == 0){
+    if(player.totalCorruption() == 0){
         toggleRefine();
 
         if(!flags.doneRefining){
@@ -1057,7 +1143,7 @@ function refine(){
         return;
     }
    
-    var amountRemoved = removeCorruption(player.refineRate);
+    var amountRemoved = removeEqually(player.refineRate);
     player.maxEssence = round(player.maxEssence + (amountRemoved * player.maxEssenceRefineIncrease));
 
     if(!flags.beginRefining && player.maxEssence >= 50.5){
@@ -1069,8 +1155,8 @@ function refine(){
 // called when certain button on keyboard is pressed
 // used to fast-forward to certain points to facilitate testing
 function debugShortcut(){
-    player.essenceTypes[0] = 26;
-    player.corruptionTypes[0] = 0;
+    player.essence.earth = 26;
+    player.corruption.earth = 0;
     flags.findMoreMushrooms = true;
     flags.mushroomsFoundAgain = true;
     flags.tastyMushrooms = true;
@@ -1086,9 +1172,9 @@ function debugShortcut(){
     $("#contextButton").css("display", "none");
     $("#essenceVisual").css("display", "inline-block");
     $("#upgradeTab").css("display","inline-block");
-    refineUpgrade0.unlock();
-    refineUpgrade1.unlock();
-    eatMultipleUpgrade.unlock();
+    upgradeList.BetterRefining.unlock();
+    upgradeList.ForcedRefining.unlock();
+    upgradeList.EatMultipleMushrooms.unlock();
     updateStats();
     wispConversation();
 }
@@ -1165,7 +1251,7 @@ function checkUpgradeUnlock(){
 // gameLoop
 setInterval(function() {
     //flag queries
-    if(!flags.findMoreMushrooms && player.essenceTypes[0] == 3){
+    if(!flags.findMoreMushrooms && player.essence.earth >= 3){
         triggerFlag("findMoreMushrooms");
     }
 
@@ -1173,11 +1259,11 @@ setInterval(function() {
         triggerFlag("mushroomsFoundAgain");
     }
 
-    if(!flags.tastyMushrooms && player.totalEssence >= 20){
+    if(!flags.tastyMushrooms && player.totalEssence() >= 20){
         triggerFlag("tastyMushrooms");
     }
 
-    if(!flags.feelingFull && player.totalEssence >= 35){
+    if(!flags.feelingFull && player.totalEssence() >= 35){
         triggerFlag("feelingFull");
     }
 
@@ -1232,8 +1318,8 @@ var wisp = [
         addNewMessage("Uh... Okay...?", "selfMessage");
         flags.runWispMessage = setInterval(wispConversation, 5000);
         $("#contextButton").css("display" , "none");
-        removeEssence([20, 0, 0, 0, 0, 0]);
-        removeCorruption([20, 0,0,0,0,0]);
+        removeEssence("earth", 20);
+        removeCorruption("earth", 20);
         addNewMessage("Blegh! This stuff is, like, pure Corruption! Have you not been refining this at all?", "wispMessage");
     },
     function(){
@@ -1283,7 +1369,7 @@ var wisp = [
         clearInterval(flags.runWispMessage);
     },
     function(){
-        if(refineUpgrade0.purchased){
+        if(upgradeList.BetterRefining.purchased){
             addNewMessage("Interesting... It looks like you've been able to use your Essence to help your refinement, right?", "wispMessage");
         }
         else{

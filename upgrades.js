@@ -1,4 +1,4 @@
-var allUpgrades = [];
+//var allUpgrades = [];
 var unlockedUpgrades = [];
 
 function Upgrade(type, name, desc, flavorText, essCost, corrCost, id){
@@ -76,7 +76,7 @@ function Upgrade(type, name, desc, flavorText, essCost, corrCost, id){
         }
     }
 
-    allUpgrades.push(this);
+    //allUpgrades.push(this);
 }
 
 //Upgrades
@@ -349,8 +349,7 @@ function createUpgrades(){
     for (upg in upgradeList){
         upg.buy = function(){
             if(canAfford(upg)){
-                removeEssence(upg.essCost);
-                //removeCorruption(upg.corrCost);
+                processCost(upg);
                 upg.activateEffect();
                 upg.purchased = true;
                 upg.$button.remove();
@@ -385,7 +384,7 @@ function createUpgrades(){
         if(flags.exactMeasurementsKnown){
             upg.$cost = $("<p></p>");
             upg.$cost
-                .text(costString(upg.essCost, upg.corrCost))
+                .text(costString(upg))
                 .addClass("upgradeCost");
         }
         upg.$flavorText = $("<p></p>");
@@ -398,7 +397,7 @@ function createUpgrades(){
         $upgradeTab.append(upg.$button);
         
         upg.checkAffordability = function(){
-            if(canAfford(upg.essCost, upg.corrCost)){
+            if(canAfford(upg)){
                 upg.$button.addClass("canAfford");
                 upg.$button.removeClass("cannotAfford");
             }
