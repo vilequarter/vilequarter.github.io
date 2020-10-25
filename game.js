@@ -1267,7 +1267,7 @@ setInterval(function() {
         triggerFlag("feelingFull");
     }
 
-    if(!flags.waterFound && areaOfInfluence.waterArea > 0){
+    if(!flags.waterFound && player.areaOfInfluence.waterArea > 0){
         triggerFlag("waterFound");
     }
 
