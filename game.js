@@ -428,7 +428,7 @@ function contextAction(stage){
         addNewMessage("Oooo, a few more mushrooms!", "selfMessage");
         button.css("display", "none");
         $("#eatMushroom").css("display", "inline-block");
-        $("#eatMushroom").text("Eat mushroom (" + areaOfInfluence.mushrooms + ")");
+        $("#eatMushroom").text("Eat mushroom (" + player.areaOfInfluence.mushrooms + ")");
         break;
 
         case 'No more mushrooms': //Ran out of mushrooms
@@ -506,15 +506,15 @@ function increaseInfluence(amount){
     player.influence += amount;
 
     if(!flags.wispApproach){
-        areaOfInfluence.mushrooms += player.influence + 1;
+        player.areaOfInfluence.mushrooms += player.influence + 1;
     }
     else{
-        areaOfInfluence.mushrooms += Math.floor((Math.floor(Math.random() * 5)) + (1 * amount));
+        player.areaOfInfluence.mushrooms += Math.floor((Math.floor(Math.random() * 5)) + (1 * amount));
         if(player.influence >= 100){
-            areaOfInfluence.waterArea += round(amount * 0.1);
+            player.areaOfInfluence.waterArea += round(amount * 0.1);
         }
     }
-    $("#eatMushroom").text("Eat mushroom (" + areaOfInfluence.mushrooms + ")");
+    $("#eatMushroom").text("Eat mushroom (" + player.areaOfInfluence.mushrooms + ")");
     updateStats();
 
     if(!flags.searchCost && player.influence >= 5){
@@ -919,7 +919,7 @@ function updateStats(){
 // attempts to subtract one mushroom from areaOfInfluence
 // if successful, adds mushroom essence value to player.essenceTypes (currently 1 earth), and updates button
 function eatMushroom(){
-    if(areaOfInfluence.mushrooms < 1){
+    if(player.areaOfInfluence.mushrooms < 1){
         return;
     }
     if(!addEssence(earth, 1)){
@@ -928,14 +928,14 @@ function eatMushroom(){
             triggerFlag("wispApproach");
         }
     }
-    areaOfInfluence.mushrooms -= 1;
-    $("#eatMushroom").text("Eat mushroom (" + areaOfInfluence.mushrooms + ")");
+    player.areaOfInfluence.mushrooms -= 1;
+    $("#eatMushroom").text("Eat mushroom (" + player.areaOfInfluence.mushrooms + ")");
 }
 
 // function eatMultiple(amount)
 // if enough mushrooms are available, calls eatMushroom as many times as is specified by amount
 function eatMultiple(amount){
-    if(amount > areaOfInfluence.mushrooms){
+    if(amount > player.areaOfInfluence.mushrooms){
         return false;
     }
     if(checkCorruption()){
@@ -1053,7 +1053,7 @@ function draw(){
         break;
 
         case 'water':
-        addEssence("water", player.drawRate * areaOfInfluence.waterArea);
+        addEssence("water", player.drawRate * player.areaOfInfluence.waterArea);
         break;
     }
 }
@@ -1165,7 +1165,7 @@ function debugShortcut(){
     flags.wispApproach = true;
     flags.wispLineNumber = 18;
     player.influence = 15;
-    areaOfInfluence.mushrooms = 6;
+    player.areaOfInfluence.mushrooms = 6;
     $("#eatMushroom").css("display", "inline-block");
     $("#searchButton").css("display", "inline-block");
     $("#refineButton").css("display", "inline-block");
