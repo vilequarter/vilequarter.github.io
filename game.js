@@ -545,7 +545,7 @@ function removeEqually(amount, resource){
                 player[resource][type] = 0;
             }
             else{
-                player[resource][type] -= fromEach;
+                player[resource][type] = round(player[resource][type] - fromEach);
                 amount -= fromEach;
             }
         }
@@ -1146,7 +1146,7 @@ function refine(){
         return;
     }
    
-    removeEqually(player.refineRate, "essence");
+    removeEqually(player.refineRate, "corruption");
     player.maxEssence = round(player.maxEssence + (player.refineRate * player.maxEssenceRefineIncrease));
 
     if(!flags.beginRefining && player.maxEssence >= 50.5){
