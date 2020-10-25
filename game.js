@@ -68,7 +68,7 @@ var player = {
     // shouldn't store here?
     refining: false,
 
-    refineRate: 0.05,
+    refineRate: 0.15,
     maxEssenceRefineIncrease: 1,
 
     //shouldn't store here?
@@ -1252,6 +1252,7 @@ function checkUpgradeUnlock(){
 }
 
 // gameLoop
+window.onload(createUpgrades());
 setInterval(function() {
     //flag queries
     if(!flags.findMoreMushrooms && player.essence.earth >= 3){

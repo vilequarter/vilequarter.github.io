@@ -129,7 +129,7 @@ var upgradeList = {
         },
         unlockConditions: {
             maxEssence: 53.5,
-            flags: "slowRefining"
+            //flags: "slowRefining"
         },
         unlockEffects: function(){
             addNewMessage("I think I'm starting to get a hang of this refining thing. I think I can make it faster if I just nudge some of the Essence like this...", "selfMessage");
