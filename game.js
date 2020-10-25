@@ -25,8 +25,8 @@ var player = {
 
     totalEssence: function(){
         var total;
-        for (x in this.essence){
-            total += this.essence[x];
+        for (type in player.essence){
+            total += player.essence[type];
         }
         return round(total);
     },
@@ -55,9 +55,10 @@ var player = {
     },
     totalCorruption: function(){
         var total;
-        for (x in this.corruption){
-            total += this.corruption[x];
+        for (type in player.corruption){
+            total += player.corruption[x];
         }
+        return round(total);
     },
     // multiplied by essence received to determine amount of corruption received
     corruptionReceived: 0.75,
@@ -1318,7 +1319,7 @@ var wisp = [
         addNewMessage("Uh... Okay...?", "selfMessage");
         flags.runWispMessage = setInterval(wispConversation, 5000);
         $("#contextButton").css("display" , "none");
-        removeEssence("earth", 20);
+        removeEssence("earth", all);
         removeCorruption("earth", 20);
         addNewMessage("Blegh! This stuff is, like, pure Corruption! Have you not been refining this at all?", "wispMessage");
     },
