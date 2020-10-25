@@ -24,7 +24,7 @@ var player = {
     },
 
     totalEssence: function(){
-        var total;
+        var total = 0;
         for (type in player.essence){
             total += player.essence[type];
         }
@@ -54,7 +54,7 @@ var player = {
         infernal: 0
     },
     totalCorruption: function(){
-        var total;
+        var total = 0;
         for (type in player.corruption){
             total += player.corruption[type];
         }
