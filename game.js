@@ -922,7 +922,7 @@ function eatMushroom(){
     if(player.areaOfInfluence.mushrooms < 1){
         return;
     }
-    if(!addEssence(earth, 1)){
+    if(!addEssence("earth", 1)){
         flags.wastedMushrooms++;
         if(!flags.wispApproach && flags.wastedMushrooms >= 10){
             triggerFlag("wispApproach");
