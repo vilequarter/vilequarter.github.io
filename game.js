@@ -56,7 +56,7 @@ var player = {
     totalCorruption: function(){
         var total;
         for (type in player.corruption){
-            total += player.corruption[x];
+            total += player.corruption[type];
         }
         return round(total);
     },
