@@ -1146,8 +1146,8 @@ function refine(){
         return;
     }
    
-    var amountRemoved = removeEqually(player.refineRate);
-    player.maxEssence = round(player.maxEssence + (amountRemoved * player.maxEssenceRefineIncrease));
+    removeEqually(player.refineRate, "essence");
+    player.maxEssence = round(player.maxEssence + (player.refineRate * player.maxEssenceRefineIncrease));
 
     if(!flags.beginRefining && player.maxEssence >= 50.5){
         triggerFlag("beginRefining");
