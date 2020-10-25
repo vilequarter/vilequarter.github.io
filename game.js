@@ -1321,7 +1321,7 @@ var wisp = [
         addNewMessage("Uh... Okay...?", "selfMessage");
         flags.runWispMessage = setInterval(wispConversation, 5000);
         $("#contextButton").css("display" , "none");
-        removeEssence("earth", all);
+        removeEssence("earth", 20);
         removeCorruption("earth", 20);
         addNewMessage("Blegh! This stuff is, like, pure Corruption! Have you not been refining this at all?", "wispMessage");
     },
