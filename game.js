@@ -1,6 +1,9 @@
+// **Saved Objects**
+
 var player = {
     influence: 1, //measured in square inches?
 
+    /*
     totalEssence: 0,
     essenceTypes: [
         0,  //earth
@@ -10,10 +13,28 @@ var player = {
         0,  //celestial
         0   //infernal
     ],
+    */
+    essence: {
+        earth: 0,
+        fire: 0,
+        water: 0,
+        air: 0,
+        celestial: 0,
+        infernal: 0
+    },
+
+    totalEssence: function(){
+        var total;
+        for (x in this.essence){
+            total += this.essence[x];
+        }
+        return total;
+    },
 
     maxEssence: 50,
     greatestEssence: 0,
 
+    /*
     totalCorruption: 0,
     corruptionTypes: [
         0,  //earth
@@ -23,41 +44,56 @@ var player = {
         0,  //celestial
         0   //infernal
     ],
+    */
+    corruption: {
+        earth: 0,
+        fire: 0,
+        water: 0,
+        air: 0,
+        celestial: 0,
+        infernal: 0
+    },
+    totalCorruption: function(){
+        var total;
+        for (x in this.corruption){
+            total += this.corruption[x];
+        }
+    },
     // multiplied by essence received to determine amount of corruption received
     corruptionReceived: 0.75,
 
     rank: 0,
+
+    // shouldn't store here?
     refining: false,
+
     refineRate: 0.05,
     maxEssenceRefineIncrease: 1,
 
+    //shouldn't store here?
     drawing: null,
+
     drawRate: 0.001,
 
+    //shouldn't store here?
     increaseInfluence: false,
+
     increaseInfluenceRate: 0.5,
+
+    areaOfInfluence:{
+        mushrooms: 1,
+        airVolume: 1,
+        waterArea: 0,
+    }
 }
 
-var ELEMENTS = ["Earth", "Fire", "Water", "Air", "Celestial", "Infernal"];
-
-var ELEMENT_COLORS = [
-    [165, 42, 42], //earth, brown
-    [255, 0, 0], //fire, red
-    [0, 0, 255], //water, blue
-    [0, 128, 0], //air, green
-    [255, 215, 0], //celestial, gold
-    [148, 0, 211], //infernal, darkviolet
-]
-
-var RANKS = ["G", "F", "E", "D", "C", "B", "A", "S", "SS", "SSS", "Heavenly", "Godly"];
-//subject to change/balance:
-var RANK_THRESHOLDS = [1, 1e11, 1e22, 1e33, 1e44, 1e55, 1e66, 1e77, 1e88, 1e99, 1e110, 1e121]; 
-
+/*
 var areaOfInfluence = {
     mushrooms: 1,
     airVolume: 1,
     waterArea: 0,
 }
+*/
 
 var flags = {
     findMoreMushrooms: false,
@@ -78,8 +114,27 @@ var flags = {
     exactMeasurementsKnown: false
 }
 
-var allUpgrades = [];
 var unlockedUpgrades = [];
+
+// **end Saved Objects**
+
+var ELEMENTS = ["Earth", "Fire", "Water", "Air", "Celestial", "Infernal"];
+
+var ELEMENT_COLORS = [
+    [165, 42, 42], //earth, brown
+    [255, 0, 0], //fire, red
+    [0, 0, 255], //water, blue
+    [0, 128, 0], //air, green
+    [255, 215, 0], //celestial, gold
+    [148, 0, 211], //infernal, darkviolet
+]
+
+var RANKS = ["G", "F", "E", "D", "C", "B", "A", "S", "SS", "SSS", "Heavenly", "Godly"];
+//subject to change/balance:
+var RANK_THRESHOLDS = [1, 1e11, 1e22, 1e33, 1e44, 1e55, 1e66, 1e77, 1e88, 1e99, 1e110, 1e121]; 
+
+/*
+var allUpgrades = [];
 
 // Upgrade constructor
 function Upgrade(type, name, desc, flavorText, essCost, corrCost, id){
@@ -214,6 +269,8 @@ eatMultipleUpgrade.activateEffect = function(){
 eatMultipleUpgrade.unlockConditions = function(){ return (player.maxEssence >= 150);};
 eatMultipleUpgrade.unlockEffects = function(){ addNewMessage("You know what, I bet I could pull the Essence from all these mushrooms at once if I concentrated...", "selfMessage");};
 
+*/
+
 // function round(value)
 // simple function that rounds an input number to 3 decimal points
 // used to keep precision and to avoid converting to a string as toFixed does
@@ -254,6 +311,13 @@ function costString(essenceCost, corruptionCost){
     return output;
 }
 
+function costString(obj){
+    var output = "";
+
+    
+}
+
+/*
 // function canAfford(essenceCost, corruptionCost)
 // accepts two arrays of six numerical values each, corresponding to ELEMENTS, for both essence and corruption costs
 // checks the costs against player.essenceTypes and player.corruptionTypes
@@ -284,6 +348,44 @@ function canAfford(essenceCost, corruptionCost){
         }
     }
     return true;
+}
+*/
+
+function canAfford(obj){
+    var essenceCost = obj.cost.essence;
+    if(typeof essenceCost != 'undefined'){
+        for(type in essenceCost){
+            var playerEssenceType = player.essence[type];
+            if(playerEssenceType < obj.cost.essence.type) return false;
+        }
+    } else return false;
+
+    var corruptionCost = obj.cost.corruption;
+    if(typeof corruptionCost != 'undefined'){
+        for(type in corruptionCost){
+            var playerCorruptionType = player.corruption[type];
+            if(playerCorruptionType < obj.cost.corruption.type) return false;
+        }
+    } else return false;
+    return true;
+}
+
+function processCost(obj){
+    var essenceCost = obj.cost.essence;
+    if(typeof essenceCost != 'undefined'){
+        for(type in essenceCost){
+            player.essence[type] -= obj.cost.essence[type];
+            round(player.essence[type]);
+        }
+    }
+    
+    var corruptionCost = obj.cost.corruption;
+    if(typeof corruptionCost != 'undefined'){
+        for(type in corruptonCost){
+            player.corruption[type] -= obj.cost.corruption[type];
+            round(player.corruption[type]);
+        }
+    }
 }
 
 // function contextAction(stage)
@@ -1044,9 +1146,18 @@ function checkRank(){
 // runs through locked upgrades and tests for their unlock conditions
 // unlocks any locked upgrades that have their conditions met
 function checkUpgradeUnlock(){
+    /*
     for (var i = 0; i < allUpgrades.length; i++){
         if(!allUpgrades[i].unlocked && allUpgrades[i].unlockConditions()){
             allUpgrades[i].unlock();
+        }
+    }
+    */
+
+    for(upgrade in upgradeList){
+        if(checkUnlock(upgrade)){
+            upgrade.unlocked = true;
+            if(typeof upgrade.unlockEffects === 'function') upgrade.unlockEffects();
         }
     }
 }
@@ -1093,7 +1204,7 @@ setInterval(function() {
     updateStats();  
 
     //upgrade unlock condition check
-    checkUpgradeUnlock();
+    checkUpgradeUnlock();    
     
     //check affordability
     for(var i = 0; i < unlockedUpgrades.length; i++){
