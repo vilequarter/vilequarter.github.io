@@ -628,13 +628,13 @@ function addEssence(type, amount){
     if(toCap < amount){
         player.essence[type] += toCap;
         addCorruption(type, toCap);
-        return;
     }
     else {
         player.essence[type] += amount;
         addCorruption(type, amount);
     }
     updateStats();
+    return true;
 }
 
 function addCorruption(type, amount){
