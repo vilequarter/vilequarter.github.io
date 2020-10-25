@@ -81,6 +81,8 @@ var player = {
 
     increaseInfluenceRate: 0.5,
 
+    influenceCost: 1,
+
     areaOfInfluence:{
         mushrooms: 1,
         airVolume: 1,
